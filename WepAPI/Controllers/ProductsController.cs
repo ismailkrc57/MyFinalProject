@@ -21,8 +21,7 @@ namespace WepAPI.Controllers
         [HttpGet("getall")]
         public IActionResult GetAll()
         {
-            IProductService productService = new ProductManager(new EfProductDal());
-            var result = productService.GetAll();
+            var result = _productService.GetAll();
             if (result.Success)
             {
                 return Ok(result);
