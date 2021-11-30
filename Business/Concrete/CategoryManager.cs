@@ -1,12 +1,16 @@
 ﻿using System.Collections.Generic;
 using Business.Abstract;
 using Business.Constants;
+using Core.Aspects.Autofac.Exception;
+using Core.CrossCuttingConcerns.Logging.Serilog.Logers;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
 
 namespace Business.Concrete
 {
+    [ExceptionLogAspect(typeof(ConsoleLogger))]
+    [ExceptionLogAspect(typeof(FileLogger))]
     public class CategoryManager : ICategoryService
     {
         private ICategoryDal iCategoryDal;

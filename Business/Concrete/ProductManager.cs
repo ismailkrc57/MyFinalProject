@@ -2,20 +2,22 @@
 using System.Collections.Generic;
 using System.Linq;
 using Business.Abstract;
+using Business.BusinessAspects.Autofac;
 using Business.Constants;
 using Business.ValidationRules.FluentValidation;
+using Core.Aspects.Autofac.Exception;
 using Core.Aspects.Autofac.Validation;
-using Core.CrossCuttingConcerns.Validation;
+using Core.CrossCuttingConcerns.Logging.Serilog.Logers;
 using Core.Utilities.Business;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.DTOs;
-using FluentValidation;
 
 namespace Business.Concrete
 {
-
+    [ExceptionLogAspect(typeof(ConsoleLogger))]
+    [ExceptionLogAspect(typeof(FileLogger))]
     public class ProductManager : IProductService
     {
         private IProductDal _iProductDal;
@@ -25,18 +27,16 @@ namespace Business.Concrete
         {
             _iProductDal = iProductDal;
             _categoryService = categoryService;
-
         }
+
         public IDataResult<List<Product>> GetAll()
         {
             if (DateTime.Now.Hour == 22)
             {
-                return new ErorDataResult<List<Product>>(Messages.MaintenanceTime);
+                return new ErrorDataResult<List<Product>>(Messages.MaintenanceTime);
             }
 
             return new SuccessDataResult<List<Product>>(_iProductDal.GetAll(), Messages.ProductListed);
-
-
         }
 
         public IDataResult<Product> GetById(int id)
@@ -51,7 +51,8 @@ namespace Business.Concrete
 
         public IDataResult<List<Product>> GetByUnitPrice(decimal min, decimal max)
         {
-            return new SuccessDataResult<List<Product>>(_iProductDal.GetAll(p => p.UnitPrice >= min && p.UnitPrice <= max));
+            return new SuccessDataResult<List<Product>>(_iProductDal.GetAll(p =>
+                p.UnitPrice >= min && p.UnitPrice <= max));
         }
 
         public IDataResult<List<ProductDetailsDto>> GetProductDetails()
@@ -59,10 +60,14 @@ namespace Business.Concrete
             return new SuccessDataResult<List<ProductDetailsDto>>(_iProductDal.getProductDetails());
         }
 
+
+        [SecuredOperation("product.add,admin")]
         [ValidationAspect(typeof(ProductValidator))]
         public IResult Add(Product product)
         {
-            var result = BusinessRule.Run(CheckIfNumberOfCategoryIsCorrect(), CheckIfProductCountOfCategoryCorrect(product.CategoryId), CheckIfProductNameExists(product.ProductName));
+            var result = BusinessRule.Run(CheckIfNumberOfCategoryIsCorrect(),
+                CheckIfProductCountOfCategoryCorrect(product.CategoryId),
+                CheckIfProductNameExists(product.ProductName));
             if (result == null)
             {
                 _iProductDal.Add(product);
@@ -70,15 +75,17 @@ namespace Business.Concrete
             }
 
             return result;
-
         }
 
-
+        [SecuredOperation("product.add,admin")]
+        [ValidationAspect(typeof(ProductValidator))]
         public IResult Update(Product product)
         {
             throw new NotImplementedException();
         }
 
+        [SecuredOperation("product.add,admin")]
+        [ValidationAspect(typeof(ProductValidator))]
         public IResult Delete(Product product)
         {
             throw new NotImplementedException();
@@ -90,7 +97,7 @@ namespace Business.Concrete
             var result = _categoryService.GetAll();
             if (result.Data.Count >= 15)
             {
-                return new ErorResult(Messages.CategoryLimitError);
+                return new ErrorResult(Messages.CategoryLimitError);
             }
 
             return new SuccessResult();
@@ -101,7 +108,7 @@ namespace Business.Concrete
             var result = _iProductDal.GetAll(p => p.ProductName.Equals(productName)).Any();
             if (result)
             {
-                return new ErorResult(Messages.ProductNameExistError);
+                return new ErrorResult(Messages.ProductNameExistError);
             }
 
             return new SuccessResult();
@@ -110,9 +117,9 @@ namespace Business.Concrete
         private IResult CheckIfProductCountOfCategoryCorrect(int categoryId)
         {
             var result = _iProductDal.GetAll(p => p.CategoryId == categoryId).Count;
-            if (result >= 10)
+            if (result >= 35)
             {
-                return new ErorResult(Messages.ProductCountOfCategoryError);
+                return new ErrorResult(Messages.ProductCountOfCategoryError);
             }
 
             return new SuccessResult();

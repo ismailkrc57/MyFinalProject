@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FluentValidation;
-using Microsoft.IdentityModel.Tokens;
-using ValidationException = System.ComponentModel.DataAnnotations.ValidationException;
+﻿using FluentValidation;
 
 namespace Core.CrossCuttingConcerns.Validation
 {
@@ -17,7 +10,7 @@ namespace Core.CrossCuttingConcerns.Validation
             var result = validator.Validate(context);
 
             if (!result.IsValid)
-                throw new ValidationException(result.Errors.ToString());
+                throw new ValidationException(result.Errors);
         }
     }
 }

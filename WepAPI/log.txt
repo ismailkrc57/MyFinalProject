@@ -1,0 +1,2 @@
+
+2021-12-01 01:47:46.822 +03:00 [ERR] {"ExceptionMessage":"System.Collections.Generic.List`1[FluentValidation.Results.ValidationFailure]","MethodName":"Login","LogParameters":[{"Name":"userForLoginDto","Value":{"Email":"string","Password":"string","$type":"UserForLoginDto"},"Type":"UserForLoginDto","$type":"LogParameter"}],"$type":"LogDetailsWithException"}
